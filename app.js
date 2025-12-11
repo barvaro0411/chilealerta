@@ -103,6 +103,7 @@ document.addEventListener('DOMContentLoaded', () => {
     setupMyZone();
     setupShareButton();
     setupOnboarding();
+    setupMobileTabs();
     initAirHistoryChart();
     simulateDataUpdates();
     setupPWAInstall();
@@ -1237,7 +1238,91 @@ function updateHealthRecommendation(station) {
     healthDiv.style.borderLeftColor = color;
 }
 
+// ===== Mobile Tabs =====
+function setupMobileTabs() {
+    const tabs = document.querySelectorAll('.mobile-tab');
+    if (!tabs.length) return;
+
+    tabs.forEach(tab => {
+        tab.addEventListener('click', () => {
+            // Update active tab
+            tabs.forEach(t => t.classList.remove('active'));
+            tab.classList.add('active');
+
+            // Show/hide content based on tab
+            const tabType = tab.dataset.tab;
+            showTabContent(tabType);
+        });
+    });
+}
+
+function showTabContent(tabType) {
+    const content = document.getElementById('contentAir');
+    if (!content) return;
+
+    // Get all sections
+    const airSummary = content.querySelector('.air-summary');
+    const healthRec = content.querySelector('.health-recommendation');
+    const pollutants = content.querySelector('.pollutants');
+    const historyChart = content.querySelector('.history-chart');
+    const regionFilter = content.querySelector('.region-filter');
+    const rankingSection = content.querySelector('.ranking-section');
+    const myZone = content.querySelector('.my-zone');
+    const stationsList = content.querySelector('.stations-list');
+
+    // Hide all sections first
+    const allSections = [airSummary, healthRec, pollutants, historyChart, regionFilter, rankingSection, myZone, stationsList];
+    allSections.forEach(section => {
+        if (section) section.style.display = 'none';
+    });
+
+    // Show sections based on tab
+    if (tabType === 'air') {
+        if (airSummary) airSummary.style.display = 'flex';
+        if (healthRec) healthRec.style.display = 'flex';
+        if (pollutants) pollutants.style.display = 'flex';
+        if (regionFilter) regionFilter.style.display = 'block';
+        if (stationsList) stationsList.style.display = 'block';
+    } else if (tabType === 'chart') {
+        if (historyChart) historyChart.style.display = 'block';
+        if (rankingSection) rankingSection.style.display = 'block';
+    } else if (tabType === 'alerts') {
+        if (myZone) myZone.style.display = 'block';
+        // Show mini emergencies list here
+        showMobileEmergencies();
+    }
+}
+
+function showMobileEmergencies() {
+    const content = document.getElementById('contentAir');
+    if (!content) return;
+
+    // Check if emergency list already exists
+    let emergencyDiv = content.querySelector('.mobile-emergencies');
+    if (!emergencyDiv) {
+        emergencyDiv = document.createElement('div');
+        emergencyDiv.className = 'mobile-emergencies';
+        content.appendChild(emergencyDiv);
+    }
+
+    emergencyDiv.style.display = 'block';
+
+    // Get emergencies from state
+    const emergencies = state.emergencies || [];
+
+    if (emergencies.length === 0) {
+        emergencyDiv.innerHTML = '<p style="color: var(--text-muted); text-align: center; padding: 20px;">No hay emergencias activas</p>';
+    } else {
+        emergencyDiv.innerHTML = emergencies.slice(0, 5).map(e => `
+            <div style="padding: 10px; margin-bottom: 8px; background: var(--bg-card); border-radius: 8px; border-left: 3px solid var(--emergency);">
+                <strong style="font-size: 0.85rem;">${e.type === 'fire' ? '🔥' : e.type === 'flood' ? '🌊' : e.type === 'power' ? '⚡' : '🚨'} ${e.title}</strong>
+                <p style="font-size: 0.75rem; color: var(--text-secondary); margin-top: 4px;">${e.description}</p>
+            </div>
+        `).join('');
+    }
+}
+
 // ===== Console Welcome Message =====
-console.log('%c🇨🇱 ChileAlerta v6.0', 'font-size: 24px; font-weight: bold; color: #0d9488;');
+console.log('%c🇨🇱 ChileAlerta v7.0', 'font-size: 24px; font-weight: bold; color: #0d9488;');
 console.log('%cMonitor de Emergencias y Ambiente en Tiempo Real', 'font-size: 12px; color: #9ca3af;');
-console.log('%c✨ Con onboarding, recomendaciones de salud y mucho más', 'font-size: 10px; color: #6b7280;');
+console.log('%c📱 Con tabs móviles para mejor navegación', 'font-size: 10px; color: #6b7280;');

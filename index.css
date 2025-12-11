@@ -474,6 +474,47 @@ body {
     color: var(--text-secondary) !important;
 }
 
+/* ===== Mobile Tabs ===== */
+.mobile-tabs {
+    display: none;
+    /* Hidden on desktop */
+    padding: 8px;
+    background: var(--bg-dark);
+    gap: 4px;
+}
+
+.mobile-tab {
+    flex: 1;
+    padding: 8px 4px;
+    background: var(--bg-card);
+    border: 1px solid var(--glass-border);
+    border-radius: 8px;
+    color: var(--text-secondary);
+    font-size: 0.7rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all var(--transition-fast);
+}
+
+.mobile-tab:hover {
+    background: var(--bg-card-hover);
+}
+
+.mobile-tab.active {
+    background: var(--primary);
+    border-color: var(--primary);
+    color: white;
+}
+
+/* Tab content sections */
+.tab-content {
+    display: block;
+}
+
+.tab-content.hidden {
+    display: none;
+}
+
 /* ===== Panels ===== */
 .panel {
     position: fixed;
@@ -1663,21 +1704,28 @@ body {
         top: auto;
         bottom: 0;
         z-index: 600;
-        max-height: 35vh;
+        max-height: 55vh;
+        /* Taller to fit more content */
     }
 
     .panel-air.collapsed {
         max-height: 50px;
     }
 
-    /* Hide emergencies panel on mobile - show only air quality */
+    /* Emergencies panel hidden - content via tabs */
     .panel-emergencies {
         display: none;
     }
 
+    /* Show mobile tabs */
+    .mobile-tabs {
+        display: flex;
+    }
+
     .panel-content {
-        padding: 12px;
-        max-height: calc(50vh - 60px);
+        padding: 10px;
+        max-height: calc(55vh - 100px);
+        overflow-y: auto;
     }
 
     /* Simplify air summary for mobile */
@@ -1699,12 +1747,25 @@ body {
         font-size: 0.55rem;
     }
 
-    /* Hide chart, ranking, and zone sections on mobile for space */
-    .history-chart,
+    /* Show all sections on mobile - controlled by tabs */
+    .history-chart {
+        padding: 8px;
+        margin-bottom: 10px;
+    }
+
+    .chart-container {
+        height: 100px;
+    }
+
     .ranking-section,
-    .my-zone,
+    .my-zone {
+        padding: 10px;
+        margin-bottom: 10px;
+    }
+
     .health-recommendation {
-        display: none;
+        padding: 8px;
+        margin-bottom: 10px;
     }
 
     /* Region filter inline */
