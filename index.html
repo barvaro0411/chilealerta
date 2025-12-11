@@ -68,6 +68,14 @@
 
     <!-- Main Content -->
     <main class="main-content">
+        <!-- Loading Skeleton -->
+        <div class="loading-overlay" id="loadingOverlay">
+            <div class="loading-content">
+                <div class="loading-spinner"></div>
+                <span class="loading-text">Cargando ChileAlerta...</span>
+            </div>
+        </div>
+
         <!-- Map Container -->
         <div id="map" class="map-container"></div>
 
@@ -90,6 +98,10 @@
                     <button class="btn-share" id="btnShare" title="Compartir">
                         📤
                     </button>
+                </div>
+                <div class="health-recommendation" id="healthRecommendation">
+                    <span class="health-icon" id="healthIcon">💚</span>
+                    <span class="health-text" id="healthText">Selecciona una estación para ver recomendaciones</span>
                 </div>
                 <div class="pollutants" id="pollutants">
                     <div class="pollutant">
@@ -293,6 +305,42 @@
                     <button type="submit" class="btn btn-primary">Enviar Reporte</button>
                 </div>
             </form>
+        </div>
+    </div>
+
+    <!-- Onboarding Modal -->
+    <div class="onboarding-overlay" id="onboardingOverlay" style="display: none;">
+        <div class="onboarding-modal">
+            <div class="onboarding-header">
+                <span class="onboarding-icon">🇨🇱</span>
+                <h2>Bienvenido a ChileAlerta</h2>
+            </div>
+            <div class="onboarding-slides" id="onboardingSlides">
+                <div class="onboarding-slide active" data-slide="0">
+                    <div class="slide-icon">🌫️</div>
+                    <h3>Calidad del Aire</h3>
+                    <p>Monitorea la calidad del aire en tiempo real de 15 estaciones en Chile</p>
+                </div>
+                <div class="onboarding-slide" data-slide="1">
+                    <div class="slide-icon">🚨</div>
+                    <h3>Emergencias</h3>
+                    <p>Reporta y visualiza emergencias colaborativas en tu zona</p>
+                </div>
+                <div class="onboarding-slide" data-slide="2">
+                    <div class="slide-icon">📍</div>
+                    <h3>Tu Zona</h3>
+                    <p>Configura tu comuna favorita y recibe alertas automáticas</p>
+                </div>
+            </div>
+            <div class="onboarding-dots">
+                <span class="dot active" data-dot="0"></span>
+                <span class="dot" data-dot="1"></span>
+                <span class="dot" data-dot="2"></span>
+            </div>
+            <div class="onboarding-actions">
+                <button class="btn-skip" id="btnSkipOnboarding">Saltar</button>
+                <button class="btn btn-primary" id="btnNextOnboarding">Siguiente</button>
+            </div>
         </div>
     </div>
 

@@ -83,11 +83,13 @@ const state = {
     currentTheme: 'dark',
     notificationsEnabled: false,
     myZone: null,
-    rankingType: 'clean'
+    rankingType: 'clean',
+    onboardingSlide: 0
 };
 
 // ===== Initialize Application =====
 document.addEventListener('DOMContentLoaded', () => {
+    showLoading();
     initTheme();
     initMap();
     loadStations();
@@ -100,10 +102,14 @@ document.addEventListener('DOMContentLoaded', () => {
     setupRanking();
     setupMyZone();
     setupShareButton();
+    setupOnboarding();
     initAirHistoryChart();
     simulateDataUpdates();
     setupPWAInstall();
     loadMyZone();
+
+    // Hide loading after everything loads
+    setTimeout(hideLoading, 1500);
 });
 
 // ===== Initialize Map =====
@@ -238,6 +244,9 @@ function selectStation(station) {
 
     // Update historical chart
     updateAirHistoryChart(station);
+
+    // Update health recommendation
+    updateHealthRecommendation(station);
 }
 
 // ===== Update Pollutant Bar =====
@@ -1107,7 +1116,128 @@ function setupPWAInstall() {
     });
 }
 
+// ===== Loading Overlay =====
+function showLoading() {
+    const overlay = document.getElementById('loadingOverlay');
+    if (overlay) overlay.classList.remove('hidden');
+}
+
+function hideLoading() {
+    const overlay = document.getElementById('loadingOverlay');
+    if (overlay) overlay.classList.add('hidden');
+
+    // Show onboarding if first visit
+    checkOnboarding();
+}
+
+// ===== Onboarding =====
+function checkOnboarding() {
+    const hasSeenOnboarding = localStorage.getItem('chilealerta_onboarding');
+    if (!hasSeenOnboarding) {
+        const overlay = document.getElementById('onboardingOverlay');
+        if (overlay) overlay.style.display = 'flex';
+    }
+}
+
+function setupOnboarding() {
+    const btnNext = document.getElementById('btnNextOnboarding');
+    const btnSkip = document.getElementById('btnSkipOnboarding');
+    const overlay = document.getElementById('onboardingOverlay');
+
+    if (!btnNext || !btnSkip || !overlay) return;
+
+    btnNext.addEventListener('click', () => {
+        state.onboardingSlide++;
+        if (state.onboardingSlide >= 3) {
+            finishOnboarding();
+        } else {
+            updateOnboardingSlide();
+            if (state.onboardingSlide === 2) {
+                btnNext.textContent = '¡Empezar!';
+            }
+        }
+    });
+
+    btnSkip.addEventListener('click', finishOnboarding);
+
+    // Dot navigation
+    document.querySelectorAll('.onboarding-dots .dot').forEach(dot => {
+        dot.addEventListener('click', () => {
+            state.onboardingSlide = parseInt(dot.dataset.dot);
+            updateOnboardingSlide();
+            btnNext.textContent = state.onboardingSlide === 2 ? '¡Empezar!' : 'Siguiente';
+        });
+    });
+}
+
+function updateOnboardingSlide() {
+    // Update slides
+    document.querySelectorAll('.onboarding-slide').forEach(slide => {
+        slide.classList.remove('active');
+        if (parseInt(slide.dataset.slide) === state.onboardingSlide) {
+            slide.classList.add('active');
+        }
+    });
+
+    // Update dots
+    document.querySelectorAll('.onboarding-dots .dot').forEach(dot => {
+        dot.classList.remove('active');
+        if (parseInt(dot.dataset.dot) === state.onboardingSlide) {
+            dot.classList.add('active');
+        }
+    });
+}
+
+function finishOnboarding() {
+    const overlay = document.getElementById('onboardingOverlay');
+    if (overlay) overlay.style.display = 'none';
+    localStorage.setItem('chilealerta_onboarding', 'true');
+    showToast('¡Bienvenido a ChileAlerta! 🇨🇱', 'success');
+}
+
+// ===== Health Recommendations =====
+function updateHealthRecommendation(station) {
+    const healthIcon = document.getElementById('healthIcon');
+    const healthText = document.getElementById('healthText');
+    const healthDiv = document.getElementById('healthRecommendation');
+
+    if (!healthIcon || !healthText || !healthDiv) return;
+
+    const ica = calculateICA(station);
+    let icon, text, color;
+
+    if (ica <= 50) {
+        icon = '💚';
+        text = 'Aire bueno. ¡Disfruta actividades al aire libre!';
+        color = 'var(--ica-good)';
+    } else if (ica <= 100) {
+        icon = '💛';
+        text = 'Moderado. Personas sensibles deberían limitar actividad prolongada.';
+        color = 'var(--ica-moderate)';
+    } else if (ica <= 150) {
+        icon = '🧡';
+        text = 'Evita ejercicio intenso. Usa mascarilla si sales.';
+        color = 'var(--ica-unhealthy-sensitive)';
+    } else if (ica <= 200) {
+        icon = '❤️';
+        text = 'Reduce actividades al aire libre. Mantén ventanas cerradas.';
+        color = 'var(--ica-unhealthy)';
+    } else if (ica <= 300) {
+        icon = '💔';
+        text = 'Evita salir. Usa purificador de aire en interiores.';
+        color = 'var(--ica-very-unhealthy)';
+    } else {
+        icon = '☠️';
+        text = '¡Emergencia! Permanece en interiores con ventanas selladas.';
+        color = 'var(--ica-hazardous)';
+    }
+
+    healthIcon.textContent = icon;
+    healthText.textContent = text;
+    healthDiv.style.borderLeftColor = color;
+}
+
 // ===== Console Welcome Message =====
-console.log('%c🇨🇱 ChileAlerta v5.0', 'font-size: 24px; font-weight: bold; color: #0d9488;');
+console.log('%c🇨🇱 ChileAlerta v6.0', 'font-size: 24px; font-weight: bold; color: #0d9488;');
 console.log('%cMonitor de Emergencias y Ambiente en Tiempo Real', 'font-size: 12px; color: #9ca3af;');
-console.log('%c🏆 Ranking, compartir y alertas por zona', 'font-size: 10px; color: #6b7280;');
+console.log('%c✨ Con onboarding, recomendaciones de salud y mucho más', 'font-size: 10px; color: #6b7280;');
