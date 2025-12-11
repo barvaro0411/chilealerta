@@ -1313,12 +1313,17 @@ function showMobileEmergencies() {
     if (emergencies.length === 0) {
         emergencyDiv.innerHTML = '<p style="color: var(--text-muted); text-align: center; padding: 20px;">No hay emergencias activas</p>';
     } else {
-        emergencyDiv.innerHTML = emergencies.slice(0, 5).map(e => `
-            <div style="padding: 10px; margin-bottom: 8px; background: var(--bg-card); border-radius: 8px; border-left: 3px solid var(--emergency);">
-                <strong style="font-size: 0.85rem;">${e.type === 'fire' ? '🔥' : e.type === 'flood' ? '🌊' : e.type === 'power' ? '⚡' : '🚨'} ${e.title}</strong>
-                <p style="font-size: 0.75rem; color: var(--text-secondary); margin-top: 4px;">${e.description}</p>
-            </div>
-        `).join('');
+        emergencyDiv.innerHTML = '<h4 style="font-size: 0.9rem; margin-bottom: 10px; color: var(--text-primary);">🚨 Emergencias Recientes</h4>' +
+            emergencies.slice(0, 5).map(e => {
+                const typeInfo = EMERGENCY_TYPES[e.type] || { icon: '🚨', label: 'Emergencia' };
+                return `
+                    <div style="padding: 10px; margin-bottom: 8px; background: var(--bg-card); border-radius: 8px; border-left: 3px solid var(--emergency);">
+                        <strong style="font-size: 0.85rem;">${typeInfo.icon} ${typeInfo.label}</strong>
+                        <p style="font-size: 0.75rem; color: var(--text-secondary); margin-top: 4px;">${e.description}</p>
+                        <p style="font-size: 0.7rem; color: var(--text-muted); margin-top: 2px;">📍 ${e.location}</p>
+                    </div>
+                `;
+            }).join('');
     }
 }
 
