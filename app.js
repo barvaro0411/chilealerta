@@ -1269,9 +1269,10 @@ function showTabContent(tabType) {
     const rankingSection = content.querySelector('.ranking-section');
     const myZone = content.querySelector('.my-zone');
     const stationsList = content.querySelector('.stations-list');
+    const mobileEmergencies = content.querySelector('.mobile-emergencies');
 
-    // Hide all sections first
-    const allSections = [airSummary, healthRec, pollutants, historyChart, regionFilter, rankingSection, myZone, stationsList];
+    // Hide all sections first (including mobile emergencies)
+    const allSections = [airSummary, healthRec, pollutants, historyChart, regionFilter, rankingSection, myZone, stationsList, mobileEmergencies];
     allSections.forEach(section => {
         if (section) section.style.display = 'none';
     });
@@ -1284,11 +1285,22 @@ function showTabContent(tabType) {
         if (regionFilter) regionFilter.style.display = 'block';
         if (stationsList) stationsList.style.display = 'block';
     } else if (tabType === 'chart') {
-        if (historyChart) historyChart.style.display = 'block';
-        if (rankingSection) rankingSection.style.display = 'block';
+        // Show history chart
+        if (historyChart) {
+            historyChart.style.display = 'block';
+            // Resize chart if needed
+            if (state.airHistoryChart) {
+                state.airHistoryChart.resize();
+            }
+        }
+        // Show ranking
+        if (rankingSection) {
+            rankingSection.style.display = 'block';
+            updateRanking(); // Refresh ranking data
+        }
     } else if (tabType === 'alerts') {
         if (myZone) myZone.style.display = 'block';
-        // Show mini emergencies list here
+        // Show mini emergencies list
         showMobileEmergencies();
     }
 }
