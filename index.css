@@ -1597,34 +1597,29 @@ body {
     }
 
     .header {
-        padding: 0 12px;
-        gap: 8px;
+        padding: 0 8px;
+        gap: 4px;
     }
 
     .header-left {
-        gap: 8px;
+        gap: 4px;
+    }
+
+    .logo h1 {
+        font-size: 0.95rem;
+    }
+
+    .logo-icon {
+        font-size: 1.2rem;
     }
 
     .tagline {
         display: none;
     }
 
-    /* Search bar compact on mobile */
+    /* Hide search on mobile - use map controls instead */
     .header-center {
-        max-width: 180px;
-        margin: 0 8px;
-    }
-
-    .search-box {
-        padding: 6px 10px;
-    }
-
-    .search-box input {
-        font-size: 0.8rem;
-    }
-
-    .search-box input::placeholder {
-        font-size: 0.75rem;
+        display: none;
     }
 
     .btn-text {
@@ -1632,20 +1627,25 @@ body {
     }
 
     .btn {
-        padding: 8px 10px;
+        padding: 6px 8px;
     }
 
     .btn-icon-only {
-        width: 36px;
-        height: 36px;
+        width: 32px;
+        height: 32px;
     }
 
-    .logo h1 {
-        font-size: 1.1rem;
+    .btn-icon-only .btn-icon {
+        font-size: 1rem;
     }
 
-    .logo-icon {
-        font-size: 1.4rem;
+    .header-right {
+        gap: 4px;
+    }
+
+    /* Hide notification badge on mobile */
+    .notification-badge {
+        display: none;
     }
 
     /* Panels become bottom sheets */
