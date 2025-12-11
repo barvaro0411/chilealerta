@@ -1654,8 +1654,8 @@ body {
         left: 0;
         right: 0;
         width: 100%;
-        border-radius: var(--border-radius) var(--border-radius) 0 0;
-        max-height: 50vh;
+        border-radius: 16px 16px 0 0;
+        max-height: 40vh;
         transition: transform 0.3s ease, max-height 0.3s ease;
     }
 
@@ -1663,22 +1663,16 @@ body {
         top: auto;
         bottom: 0;
         z-index: 600;
+        max-height: 35vh;
     }
 
     .panel-air.collapsed {
-        max-height: 60px;
+        max-height: 50px;
     }
 
-    /* Both panels visible - air at bottom, emergencies slides from right */
+    /* Hide emergencies panel on mobile - show only air quality */
     .panel-emergencies {
-        top: calc(var(--header-height) + 8px);
-        bottom: auto;
-        left: auto;
-        right: 8px;
-        width: 280px;
-        max-height: 40vh;
-        z-index: 550;
-        border-radius: var(--border-radius);
+        display: none;
     }
 
     .panel-content {
@@ -1705,19 +1699,12 @@ body {
         font-size: 0.55rem;
     }
 
-    /* Chart compact on mobile instead of hidden */
-    .history-chart {
-        padding: 10px;
-        margin-bottom: 10px;
-    }
-
-    .history-chart h3 {
-        font-size: 0.7rem;
-        margin-bottom: 8px;
-    }
-
-    .chart-container {
-        height: 80px;
+    /* Hide chart, ranking, and zone sections on mobile for space */
+    .history-chart,
+    .ranking-section,
+    .my-zone,
+    .health-recommendation {
+        display: none;
     }
 
     /* Region filter inline */
@@ -1764,16 +1751,18 @@ body {
         font-size: 0.7rem;
     }
 
-    /* Legend compact bar at top of map */
+    /* Legend - small fixed bar at top */
     .legend {
         position: fixed;
-        top: calc(var(--header-height) + 8px);
-        left: 50%;
-        transform: translateX(-50%);
+        top: calc(var(--header-height) + 4px);
+        left: 8px;
+        right: auto;
+        transform: none;
         bottom: auto;
-        padding: 8px 12px;
-        border-radius: 20px;
+        padding: 6px 10px;
+        border-radius: 16px;
         z-index: 400;
+        max-width: 200px;
     }
 
     .legend-title {
@@ -1782,16 +1771,18 @@ body {
 
     .legend-items {
         flex-wrap: nowrap;
-        gap: 10px;
+        gap: 6px;
+        overflow-x: auto;
     }
 
     .legend-item {
-        font-size: 0.65rem;
+        font-size: 0.55rem;
+        white-space: nowrap;
     }
 
     .legend-color {
-        width: 10px;
-        height: 10px;
+        width: 8px;
+        height: 8px;
     }
 
     /* Pollutants compact */
