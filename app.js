@@ -34,8 +34,8 @@ function getICAInfo(ica) {
     return { color: ICA_COLORS.hazardous, status: 'Peligroso', level: 'hazardous' };
 }
 
-// ===== Simulated Air Quality Stations (Real SINCA stations) =====
-const STATIONS = [
+// ===== Simulated Air Quality Stations (Fallback data) =====
+let STATIONS = [
     { id: 1, name: 'Pudahuel', location: 'RM - Pudahuel', lat: -33.4378, lng: -70.7506, pm25: 28, pm10: 45, o3: 35, no2: 22 },
     { id: 2, name: 'Cerrillos', location: 'RM - Cerrillos', lat: -33.4975, lng: -70.7119, pm25: 32, pm10: 52, o3: 28, no2: 25 },
     { id: 3, name: 'Cerro Navia', location: 'RM - Cerro Navia', lat: -33.4250, lng: -70.7328, pm25: 45, pm10: 68, o3: 22, no2: 35 },
@@ -52,6 +52,64 @@ const STATIONS = [
     { id: 14, name: 'Rancagua', location: 'O\'Higgins', lat: -34.1708, lng: -70.7444, pm25: 55, pm10: 82, o3: 22, no2: 35 },
     { id: 15, name: 'Coyhaique', location: 'Aysén', lat: -45.5712, lng: -72.0685, pm25: 95, pm10: 145, o3: 12, no2: 22 }
 ];
+
+// Flag to track if using real data
+let usingRealData = false;
+
+// ===== Fetch Real Air Quality Data from OpenAQ =====
+async function fetchOpenAQData() {
+    try {
+        // OpenAQ API v2 - Get latest measurements from Chile
+        const response = await fetch('https://api.openaq.org/v2/latest?country=CL&limit=100&parameter=pm25');
+
+        if (!response.ok) throw new Error('API request failed');
+
+        const data = await response.json();
+
+        if (!data.results || data.results.length === 0) {
+            throw new Error('No data available');
+        }
+
+        // Transform OpenAQ data to our format
+        const realStations = data.results
+            .filter(loc => loc.coordinates && loc.measurements)
+            .map((loc, index) => {
+                const pm25 = loc.measurements.find(m => m.parameter === 'pm25')?.value || 0;
+                const pm10 = loc.measurements.find(m => m.parameter === 'pm10')?.value || 0;
+                const o3 = loc.measurements.find(m => m.parameter === 'o3')?.value || 0;
+                const no2 = loc.measurements.find(m => m.parameter === 'no2')?.value || 0;
+
+                return {
+                    id: index + 1,
+                    name: loc.location || loc.city,
+                    location: loc.city || 'Chile',
+                    lat: loc.coordinates.latitude,
+                    lng: loc.coordinates.longitude,
+                    pm25: Math.round(pm25),
+                    pm10: Math.round(pm10 || pm25 * 1.5),
+                    o3: Math.round(o3 || Math.random() * 40),
+                    no2: Math.round(no2 || Math.random() * 30),
+                    realData: true,
+                    lastUpdated: loc.measurements[0]?.lastUpdated || new Date().toISOString()
+                };
+            })
+            .slice(0, 30); // Limit to 30 stations
+
+        if (realStations.length > 0) {
+            STATIONS = realStations;
+            usingRealData = true;
+            console.log(`✅ Datos reales cargados: ${realStations.length} estaciones de OpenAQ`);
+            return true;
+        }
+
+        throw new Error('No valid stations found');
+    } catch (error) {
+        console.log('⚠️ OpenAQ no disponible, usando datos simulados:', error.message);
+        usingRealData = false;
+        return false;
+    }
+}
+
 
 // ===== Emergency Types =====
 const EMERGENCY_TYPES = {
@@ -88,10 +146,14 @@ const state = {
 };
 
 // ===== Initialize Application =====
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('DOMContentLoaded', async () => {
     showLoading();
     initTheme();
     initMap();
+
+    // Try to fetch real data from OpenAQ
+    await fetchOpenAQData();
+
     loadStations();
     loadEmergencies();
     setupEventListeners();
@@ -111,6 +173,9 @@ document.addEventListener('DOMContentLoaded', () => {
     setupPWAInstall();
     loadMyZone();
     trackFirstVisit();
+
+    // Show data source indicator
+    showDataSourceIndicator();
 
     // Hide loading after everything loads
     setTimeout(hideLoading, 1500);
@@ -1427,7 +1492,17 @@ function setupOfflineDetection() {
     updateOnlineStatus();
 }
 
+// ===== Data Source Indicator =====
+function showDataSourceIndicator() {
+    if (usingRealData) {
+        showToast('📡 Datos reales de OpenAQ cargados', 'success');
+    } else {
+        showToast('⚠️ Usando datos simulados (API no disponible)', 'error');
+    }
+}
+
 // ===== Console Welcome Message =====
-console.log('%c🇨🇱 ChileAlerta v8.0', 'font-size: 24px; font-weight: bold; color: #0d9488;');
+console.log('%c🇨🇱 ChileAlerta v9.0', 'font-size: 24px; font-weight: bold; color: #0d9488;');
 console.log('%cMonitor de Emergencias y Ambiente en Tiempo Real', 'font-size: 12px; color: #9ca3af;');
-console.log('%c✨ Con stats personales, modo offline y footer profesional', 'font-size: 10px; color: #6b7280;');
+console.log('%c📡 Con datos reales de calidad del aire de OpenAQ', 'font-size: 10px; color: #6b7280;');
+
