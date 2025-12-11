@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ChileAlerta - Monitor de Emergencias y Ambiente</title>
+    <meta name="description"
+        content="Monitoreo en tiempo real de calidad del aire y emergencias colaborativas en Chile">
+
+    <!-- PWA Meta Tags -->
+    <meta name="theme-color" content="#0f172a">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="ChileAlerta">
+    <link rel="manifest" href="manifest.json">
+    <link rel="apple-touch-icon" href="icons/icon-192.png">
+
+    <!-- Leaflet CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap"
+        rel="stylesheet">
+
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="index.css">
+</head>
+
+<body>
+    <!-- Header -->
+    <header class="header">
+        <div class="header-left">
+            <div class="logo">
+                <span class="logo-icon">🇨🇱</span>
+                <h1>ChileAlerta</h1>
+            </div>
+            <span class="tagline">Monitor de Emergencias y Ambiente</span>
+        </div>
+        <div class="header-center">
+            <div class="search-box" id="searchBox">
+                <span class="search-icon">🔍</span>
+                <input type="text" id="searchInput" placeholder="Buscar dirección en Chile..." autocomplete="off">
+                <button class="search-clear" id="searchClear" style="display: none;">×</button>
+            </div>
+            <div class="search-results" id="searchResults"></div>
+        </div>
+        <div class="header-right">
+            <button class="btn btn-location" id="btnLocation" title="Mi ubicación">
+                <span class="btn-icon">📍</span>
+                <span class="btn-text">Mi ubicación</span>
+            </button>
+            <button class="btn btn-report" id="btnReport">
+                <span class="btn-icon">🚨</span>
+                <span class="btn-text">Reportar Emergencia</span>
+            </button>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="main-content">
+        <!-- Map Container -->
+        <div id="map" class="map-container"></div>
+
+        <!-- Air Quality Panel -->
+        <aside class="panel panel-air" id="panelAir">
+            <div class="panel-header">
+                <h2>🌫️ Calidad del Aire</h2>
+                <button class="panel-toggle" id="toggleAir">−</button>
+            </div>
+            <div class="panel-content" id="contentAir">
+                <div class="air-summary" id="airSummary">
+                    <div class="ica-display" id="icaDisplay">
+                        <span class="ica-value">--</span>
+                        <span class="ica-label">ICA</span>
+                    </div>
+                    <div class="ica-info">
+                        <span class="ica-status" id="icaStatus">Selecciona una estación</span>
+                        <span class="ica-station" id="icaStation">--</span>
+                    </div>
+                </div>
+                <div class="pollutants" id="pollutants">
+                    <div class="pollutant">
+                        <span class="pollutant-name">PM2.5</span>
+                        <div class="pollutant-bar">
+                            <div class="pollutant-fill" id="pm25Bar" style="width: 0%"></div>
+                        </div>
+                        <span class="pollutant-value" id="pm25Value">--</span>
+                    </div>
+                    <div class="pollutant">
+                        <span class="pollutant-name">PM10</span>
+                        <div class="pollutant-bar">
+                            <div class="pollutant-fill" id="pm10Bar" style="width: 0%"></div>
+                        </div>
+                        <span class="pollutant-value" id="pm10Value">--</span>
+                    </div>
+                    <div class="pollutant">
+                        <span class="pollutant-name">O₃</span>
+                        <div class="pollutant-bar">
+                            <div class="pollutant-fill" id="o3Bar" style="width: 0%"></div>
+                        </div>
+                        <span class="pollutant-value" id="o3Value">--</span>
+                    </div>
+                    <div class="pollutant">
+                        <span class="pollutant-name">NO₂</span>
+                        <div class="pollutant-bar">
+                            <div class="pollutant-fill" id="no2Bar" style="width: 0%"></div>
+                        </div>
+                        <span class="pollutant-value" id="no2Value">--</span>
+                    </div>
+                </div>
+                <div class="history-chart" id="historyChartSection">
+                    <h3>📈 Historial 24h</h3>
+                    <div class="chart-container">
+                        <canvas id="airHistoryChart"></canvas>
+                    </div>
+                </div>
+                <div class="stations-list" id="stationsList">
+                    <h3>Estaciones cercanas</h3>
+                    <div class="stations-scroll" id="stationsScroll">
+                        <!-- Stations will be added dynamically -->
+                    </div>
+                </div>
+            </div>
+        </aside>
+
+        <!-- Emergencies Panel -->
+        <aside class="panel panel-emergencies" id="panelEmergencies">
+            <div class="panel-header">
+                <h2>🚨 Emergencias Activas</h2>
+                <button class="panel-toggle" id="toggleEmergencies">−</button>
+            </div>
+            <div class="panel-content" id="contentEmergencies">
+                <div class="emergency-filters">
+                    <button class="filter-btn active" data-filter="all">Todas</button>
+                    <button class="filter-btn" data-filter="corte">Cortes</button>
+                    <button class="filter-btn" data-filter="accidente">Accidentes</button>
+                    <button class="filter-btn" data-filter="incendio">Incendios</button>
+                    <button class="filter-btn" data-filter="otro">Otros</button>
+                </div>
+                <div class="emergency-stats" id="emergencyStats">
+                    <div class="stat">
+                        <span class="stat-value" id="totalReports">0</span>
+                        <span class="stat-label">Reportes</span>
+                    </div>
+                    <div class="stat">
+                        <span class="stat-value" id="activeReports">0</span>
+                        <span class="stat-label">Activos</span>
+                    </div>
+                </div>
+                <div class="emergency-list" id="emergencyList">
+                    <!-- Emergencies will be added dynamically -->
+                    <div class="empty-state" id="emptyEmergencies">
+                        <span class="empty-icon">✨</span>
+                        <p>No hay emergencias reportadas</p>
+                        <small>¡Eso es bueno!</small>
+                    </div>
+                </div>
+            </div>
+        </aside>
+
+        <!-- Legend -->
+        <div class="legend" id="legend">
+            <div class="legend-title">Calidad del Aire</div>
+            <div class="legend-items">
+                <div class="legend-item">
+                    <span class="legend-color" style="background: #00e676"></span>
+                    <span>Bueno</span>
+                </div>
+                <div class="legend-item">
+                    <span class="legend-color" style="background: #ffeb3b"></span>
+                    <span>Moderado</span>
+                </div>
+                <div class="legend-item">
+                    <span class="legend-color" style="background: #ff9800"></span>
+                    <span>Dañino (sensibles)</span>
+                </div>
+                <div class="legend-item">
+                    <span class="legend-color" style="background: #f44336"></span>
+                    <span>Dañino</span>
+                </div>
+                <div class="legend-item">
+                    <span class="legend-color" style="background: #9c27b0"></span>
+                    <span>Muy dañino</span>
+                </div>
+                <div class="legend-item">
+                    <span class="legend-color" style="background: #5d4037"></span>
+                    <span>Peligroso</span>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Report Modal -->
+    <div class="modal" id="reportModal">
+        <div class="modal-overlay" id="modalOverlay"></div>
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>🚨 Reportar Emergencia</h2>
+                <button class="modal-close" id="modalClose">×</button>
+            </div>
+            <form class="modal-body" id="reportForm">
+                <div class="form-group">
+                    <label for="reportType">Tipo de emergencia</label>
+                    <select id="reportType" required>
+                        <option value="">Selecciona un tipo</option>
+                        <option value="corte-agua">💧 Corte de agua</option>
+                        <option value="corte-luz">💡 Corte de luz</option>
+                        <option value="corte-gas">🔥 Corte de gas</option>
+                        <option value="accidente">🚗 Accidente de tránsito</option>
+                        <option value="incendio">🔥 Incendio</option>
+                        <option value="inundacion">🌊 Inundación</option>
+                        <option value="derrumbe">🏚️ Derrumbe</option>
+                        <option value="otro">⚠️ Otro</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="reportDescription">Descripción</label>
+                    <textarea id="reportDescription" rows="3" placeholder="Describe brevemente la situación..."
+                        required></textarea>
+                </div>
+                <div class="form-group">
+                    <label for="reportLocation">Ubicación</label>
+                    <div class="location-input">
+                        <input type="text" id="reportLocation" placeholder="Dirección o referencia" required>
+                        <button type="button" class="btn-use-location" id="useMyLocation">📍</button>
+                    </div>
+                    <small class="location-hint" id="locationHint">Haz clic en 📍 para usar tu ubicación actual</small>
+                </div>
+                <input type="hidden" id="reportLat">
+                <input type="hidden" id="reportLng">
+                <div class="form-actions">
+                    <button type="button" class="btn btn-secondary" id="btnCancel">Cancelar</button>
+                    <button type="submit" class="btn btn-primary">Enviar Reporte</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Toast Notifications -->
+    <div class="toast-container" id="toastContainer"></div>
+
+    <!-- Scripts -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="app.js"></script>
+    <script>
+        // Register Service Worker for PWA
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('/sw.js')
+                    .then(reg => console.log('✅ Service Worker registrado'))
+                    .catch(err => console.log('Service Worker no disponible:', err));
+            });
+        }
+    </script>
+</body>
+
+</html>
