@@ -1,11 +1,11 @@
 // ChileAlerta Service Worker - PWA Offline Support
-const CACHE_NAME = 'chilealerta-v1.0.0';
+const CACHE_NAME = 'chilealerta-v3.0.0';
 const STATIC_ASSETS = [
-    '/',
-    '/index.html',
-    '/index.css',
-    '/app.js',
-    '/manifest.json',
+    './',
+    './index.html',
+    './index.css',
+    './app.js',
+    './manifest.json',
     'https://unpkg.com/leaflet@1.9.4/dist/leaflet.css',
     'https://unpkg.com/leaflet@1.9.4/dist/leaflet.js',
     'https://cdn.jsdelivr.net/npm/chart.js',
@@ -82,7 +82,7 @@ self.addEventListener('fetch', event => {
                     .catch(() => {
                         // Offline fallback for HTML pages
                         if (event.request.headers.get('accept').includes('text/html')) {
-                            return caches.match('/index.html');
+                            return caches.match('./index.html');
                         }
                     });
             })
@@ -101,8 +101,8 @@ self.addEventListener('sync', event => {
 self.addEventListener('push', event => {
     const options = {
         body: event.data ? event.data.text() : '¡Nueva alerta en tu zona!',
-        icon: '/icons/icon-192.png',
-        badge: '/icons/icon-72.png',
+        icon: './icons/icon-192.png',
+        badge: './icons/icon-72.png',
         vibrate: [100, 50, 100],
         data: {
             dateOfArrival: Date.now(),

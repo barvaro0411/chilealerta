@@ -2,7 +2,7 @@
     "name": "ChileAlerta",
     "short_name": "ChileAlerta",
     "description": "Monitor de Emergencias y Ambiente en Tiempo Real - Chile",
-    "start_url": "/",
+    "start_url": "./index.html",
     "display": "standalone",
     "background_color": "#0f172a",
     "theme_color": "#0f172a",
@@ -57,15 +57,24 @@
             "purpose": "any maskable"
         }
     ],
-    "categories": ["utilities", "weather", "news"],
+    "categories": [
+        "utilities",
+        "weather",
+        "news"
+    ],
     "screenshots": [],
     "shortcuts": [
         {
             "name": "Reportar Emergencia",
             "short_name": "Reportar",
             "description": "Reportar una emergencia",
-            "url": "/?action=report",
-            "icons": [{ "src": "icons/icon-96.png", "sizes": "96x96" }]
+            "url": "./index.html?action=report",
+            "icons": [
+                {
+                    "src": "icons/icon-96.png",
+                    "sizes": "96x96"
+                }
+            ]
         }
     ]
 }
