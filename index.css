@@ -17,7 +17,7 @@
     --emergency: #ef4444;
     --emergency-light: #fca5a5;
 
-    /* Background */
+    /* Background - Dark Theme (default) */
     --bg-dark: #0f172a;
     --bg-card: rgba(30, 41, 59, 0.85);
     --bg-card-hover: rgba(51, 65, 85, 0.9);
@@ -42,6 +42,19 @@
     --transition-fast: 0.15s ease;
     --transition-normal: 0.3s ease;
     --transition-slow: 0.5s ease;
+}
+
+/* ===== Light Theme ===== */
+[data-theme="light"] {
+    --bg-dark: #f1f5f9;
+    --bg-card: rgba(255, 255, 255, 0.9);
+    --bg-card-hover: rgba(241, 245, 249, 0.95);
+    --glass-bg: rgba(255, 255, 255, 0.85);
+    --glass-border: rgba(0, 0, 0, 0.1);
+    --glass-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+    --text-primary: #0f172a;
+    --text-secondary: #475569;
+    --text-muted: #64748b;
 }
 
 /* ===== Reset & Base ===== */
@@ -308,6 +321,101 @@ body {
 .btn-secondary:hover {
     background: var(--bg-card-hover);
     color: var(--text-primary);
+}
+
+/* Icon Only Buttons */
+.btn-icon-only {
+    position: relative;
+    width: 40px;
+    height: 40px;
+    padding: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--bg-card);
+    border: 1px solid var(--glass-border);
+    border-radius: var(--border-radius-sm);
+    color: var(--text-primary);
+    cursor: pointer;
+    transition: all var(--transition-fast);
+}
+
+.btn-icon-only:hover {
+    background: var(--bg-card-hover);
+    border-color: var(--primary);
+    transform: scale(1.05);
+}
+
+.btn-icon-only .btn-icon {
+    font-size: 1.2rem;
+}
+
+/* Notification Badge */
+.notification-badge {
+    position: absolute;
+    top: -4px;
+    right: -4px;
+    min-width: 18px;
+    height: 18px;
+    padding: 0 5px;
+    background: var(--emergency);
+    border-radius: 9px;
+    font-size: 0.7rem;
+    font-weight: 600;
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    animation: pulse 2s infinite;
+}
+
+/* Region Filter */
+.region-filter {
+    margin-bottom: 16px;
+}
+
+.region-filter h3 {
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: var(--text-secondary);
+    margin-bottom: 8px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.region-filter select {
+    width: 100%;
+    padding: 10px 12px;
+    background: var(--bg-card);
+    border: 1px solid var(--glass-border);
+    border-radius: var(--border-radius-sm);
+    color: var(--text-primary);
+    font-family: inherit;
+    font-size: 0.85rem;
+    cursor: pointer;
+    transition: all var(--transition-fast);
+}
+
+.region-filter select:hover {
+    border-color: var(--primary);
+}
+
+.region-filter select:focus {
+    outline: none;
+    border-color: var(--primary);
+    box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.2);
+}
+
+.region-filter select option {
+    background: var(--bg-dark);
+    color: var(--text-primary);
+}
+
+/* Station Count */
+#stationCount {
+    font-weight: 400;
+    color: var(--text-muted);
+    font-size: 0.75rem;
 }
 
 /* ===== Main Content ===== */

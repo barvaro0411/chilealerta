@@ -48,6 +48,13 @@
             <div class="search-results" id="searchResults"></div>
         </div>
         <div class="header-right">
+            <button class="btn btn-icon-only" id="btnTheme" title="Cambiar tema">
+                <span class="btn-icon" id="themeIcon">🌙</span>
+            </button>
+            <button class="btn btn-icon-only" id="btnNotifications" title="Notificaciones">
+                <span class="btn-icon">🔔</span>
+                <span class="notification-badge" id="notificationBadge" style="display: none;">0</span>
+            </button>
             <button class="btn btn-location" id="btnLocation" title="Mi ubicación">
                 <span class="btn-icon">📍</span>
                 <span class="btn-text">Mi ubicación</span>
@@ -117,8 +124,20 @@
                         <canvas id="airHistoryChart"></canvas>
                     </div>
                 </div>
+                <div class="region-filter" id="regionFilter">
+                    <h3>📍 Región</h3>
+                    <select id="regionSelect">
+                        <option value="all">Todas las regiones</option>
+                        <option value="RM">Región Metropolitana</option>
+                        <option value="Valparaíso">Valparaíso</option>
+                        <option value="Bío Bío">Bío Bío</option>
+                        <option value="Araucanía">Araucanía</option>
+                        <option value="O'Higgins">O'Higgins</option>
+                        <option value="Aysén">Aysén</option>
+                    </select>
+                </div>
                 <div class="stations-list" id="stationsList">
-                    <h3>Estaciones cercanas</h3>
+                    <h3>Estaciones <span id="stationCount">(15)</span></h3>
                     <div class="stations-scroll" id="stationsScroll">
                         <!-- Stations will be added dynamically -->
                     </div>

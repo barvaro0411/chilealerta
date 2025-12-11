@@ -78,16 +78,23 @@ const state = {
     activeFilter: 'all',
     airHistoryChart: null,
     searchTimeout: null,
-    deferredPrompt: null
+    deferredPrompt: null,
+    regionFilter: 'all',
+    currentTheme: 'dark',
+    notificationsEnabled: false
 };
 
 // ===== Initialize Application =====
 document.addEventListener('DOMContentLoaded', () => {
+    initTheme();
     initMap();
     loadStations();
     loadEmergencies();
     setupEventListeners();
     setupSearchListeners();
+    setupThemeToggle();
+    setupNotifications();
+    setupRegionFilter();
     initAirHistoryChart();
     simulateDataUpdates();
     setupPWAInstall();
@@ -118,7 +125,20 @@ function loadStations() {
     const stationsScroll = document.getElementById('stationsScroll');
     stationsScroll.innerHTML = '';
 
-    STATIONS.forEach(station => {
+    // Clear existing station markers
+    state.markers.stations.forEach(m => m.marker.remove());
+    state.markers.stations = [];
+
+    // Get filtered stations
+    const filteredStations = getFilteredStations();
+
+    // Update station count
+    const stationCount = document.getElementById('stationCount');
+    if (stationCount) {
+        stationCount.textContent = `(${filteredStations.length})`;
+    }
+
+    filteredStations.forEach(station => {
         const ica = calculateICA(station);
         const icaInfo = getICAInfo(ica);
 
@@ -153,8 +173,8 @@ function loadStations() {
     });
 
     // Select first station by default
-    if (STATIONS.length > 0) {
-        selectStation(STATIONS[0]);
+    if (filteredStations.length > 0) {
+        selectStation(filteredStations[0]);
     }
 }
 
@@ -762,6 +782,137 @@ async function searchAddress(query) {
     }
 }
 
+// ===== Theme Toggle =====
+function initTheme() {
+    const savedTheme = localStorage.getItem('chilealerta_theme') || 'dark';
+    state.currentTheme = savedTheme;
+    document.documentElement.setAttribute('data-theme', savedTheme);
+    updateThemeIcon();
+}
+
+function setupThemeToggle() {
+    const btnTheme = document.getElementById('btnTheme');
+    if (!btnTheme) return;
+
+    btnTheme.addEventListener('click', () => {
+        state.currentTheme = state.currentTheme === 'dark' ? 'light' : 'dark';
+        document.documentElement.setAttribute('data-theme', state.currentTheme);
+        localStorage.setItem('chilealerta_theme', state.currentTheme);
+        updateThemeIcon();
+        showToast(`Tema ${state.currentTheme === 'dark' ? 'oscuro' : 'claro'} activado`, 'success');
+    });
+}
+
+function updateThemeIcon() {
+    const themeIcon = document.getElementById('themeIcon');
+    if (themeIcon) {
+        themeIcon.textContent = state.currentTheme === 'dark' ? '🌙' : '☀️';
+    }
+}
+
+// ===== Notifications =====
+function setupNotifications() {
+    const btnNotifications = document.getElementById('btnNotifications');
+    if (!btnNotifications) return;
+
+    btnNotifications.addEventListener('click', async () => {
+        if (!('Notification' in window)) {
+            showToast('Tu navegador no soporta notificaciones', 'error');
+            return;
+        }
+
+        if (Notification.permission === 'granted') {
+            state.notificationsEnabled = !state.notificationsEnabled;
+            updateNotificationBadge();
+            showToast(state.notificationsEnabled ?
+                'Notificaciones activadas 🔔' :
+                'Notificaciones desactivadas', 'success');
+
+            if (state.notificationsEnabled) {
+                checkAirQualityAlerts();
+            }
+        } else if (Notification.permission !== 'denied') {
+            const permission = await Notification.requestPermission();
+            if (permission === 'granted') {
+                state.notificationsEnabled = true;
+                updateNotificationBadge();
+                showToast('¡Notificaciones activadas! 🔔', 'success');
+                checkAirQualityAlerts();
+            }
+        } else {
+            showToast('Las notificaciones están bloqueadas en tu navegador', 'error');
+        }
+    });
+}
+
+function updateNotificationBadge() {
+    const badge = document.getElementById('notificationBadge');
+    if (!badge) return;
+
+    if (state.notificationsEnabled) {
+        // Count stations with bad air quality (ICA > 100)
+        const alertCount = STATIONS.filter(s => calculateICA(s) > 100).length;
+        if (alertCount > 0) {
+            badge.textContent = alertCount;
+            badge.style.display = 'flex';
+        } else {
+            badge.style.display = 'none';
+        }
+    } else {
+        badge.style.display = 'none';
+    }
+}
+
+function checkAirQualityAlerts() {
+    if (!state.notificationsEnabled) return;
+
+    const badStations = STATIONS.filter(s => calculateICA(s) > 150);
+
+    if (badStations.length > 0) {
+        const worst = badStations.reduce((a, b) =>
+            calculateICA(a) > calculateICA(b) ? a : b
+        );
+        const ica = calculateICA(worst);
+
+        new Notification('⚠️ Alerta de Calidad del Aire', {
+            body: `${worst.name}: ICA ${ica} - ${getICAInfo(ica).status}`,
+            icon: '/icons/icon-192.png',
+            badge: '/icons/icon-72.png',
+            tag: 'air-quality-alert'
+        });
+    }
+
+    updateNotificationBadge();
+}
+
+// ===== Region Filter =====
+function setupRegionFilter() {
+    const regionSelect = document.getElementById('regionSelect');
+    if (!regionSelect) return;
+
+    regionSelect.addEventListener('change', (e) => {
+        state.regionFilter = e.target.value;
+        loadStations();
+        showToast(`Mostrando: ${e.target.value === 'all' ? 'Todas las regiones' : e.target.value}`, 'success');
+    });
+}
+
+function getFilteredStations() {
+    if (state.regionFilter === 'all') {
+        return STATIONS;
+    }
+
+    return STATIONS.filter(station => {
+        const location = station.location.toLowerCase();
+        const filter = state.regionFilter.toLowerCase();
+
+        if (filter === 'rm') {
+            return location.includes('rm') || location.includes('metropolitana');
+        }
+        return location.includes(filter);
+    });
+}
+
 // ===== PWA Install Prompt =====
 function setupPWAInstall() {
     window.addEventListener('beforeinstallprompt', (e) => {
@@ -779,6 +930,6 @@ function setupPWAInstall() {
 }
 
 // ===== Console Welcome Message =====
-console.log('%c🇨🇱 ChileAlerta v2.0', 'font-size: 24px; font-weight: bold; color: #6366f1;');
+console.log('%c🇨🇱 ChileAlerta v3.0', 'font-size: 24px; font-weight: bold; color: #6366f1;');
 console.log('%cMonitor de Emergencias y Ambiente en Tiempo Real', 'font-size: 12px; color: #94a3b8;');
-console.log('%c📊 Con gráficos históricos, búsqueda de direcciones y PWA', 'font-size: 10px; color: #64748b;');
+console.log('%c🎨 Con tema claro/oscuro, notificaciones y filtro por región', 'font-size: 10px; color: #64748b;');
