@@ -81,7 +81,9 @@ const state = {
     deferredPrompt: null,
     regionFilter: 'all',
     currentTheme: 'dark',
-    notificationsEnabled: false
+    notificationsEnabled: false,
+    myZone: null,
+    rankingType: 'clean'
 };
 
 // ===== Initialize Application =====
@@ -95,9 +97,13 @@ document.addEventListener('DOMContentLoaded', () => {
     setupThemeToggle();
     setupNotifications();
     setupRegionFilter();
+    setupRanking();
+    setupMyZone();
+    setupShareButton();
     initAirHistoryChart();
     simulateDataUpdates();
     setupPWAInstall();
+    loadMyZone();
 });
 
 // ===== Initialize Map =====
@@ -913,6 +919,178 @@ function getFilteredStations() {
     });
 }
 
+// ===== Share Button =====
+function setupShareButton() {
+    const btnShare = document.getElementById('btnShare');
+    if (!btnShare) return;
+
+    btnShare.addEventListener('click', shareAirQuality);
+}
+
+function shareAirQuality() {
+    if (!state.selectedStation) {
+        showToast('Selecciona una estación primero', 'error');
+        return;
+    }
+
+    const station = state.selectedStation;
+    const ica = calculateICA(station);
+    const icaInfo = getICAInfo(ica);
+
+    const shareText = `🌫️ Calidad del Aire en ${station.name}
+📊 ICA: ${ica} - ${icaInfo.status}
+💨 PM2.5: ${station.pm25} µg/m³
+
+🔗 Ver más en ChileAlerta`;
+
+    const shareUrl = window.location.href;
+
+    if (navigator.share) {
+        // Native share (mobile)
+        navigator.share({
+            title: 'ChileAlerta - Calidad del Aire',
+            text: shareText,
+            url: shareUrl
+        }).then(() => {
+            showToast('¡Compartido! 📤', 'success');
+        }).catch(err => {
+            if (err.name !== 'AbortError') {
+                copyToClipboard(shareText + '\n' + shareUrl);
+            }
+        });
+    } else {
+        // Fallback: copy to clipboard
+        copyToClipboard(shareText + '\n' + shareUrl);
+    }
+}
+
+function copyToClipboard(text) {
+    navigator.clipboard.writeText(text).then(() => {
+        showToast('Copiado al portapapeles 📋', 'success');
+    }).catch(() => {
+        showToast('No se pudo copiar', 'error');
+    });
+}
+
+// ===== Ranking =====
+function setupRanking() {
+    const tabs = document.querySelectorAll('.ranking-tab');
+    tabs.forEach(tab => {
+        tab.addEventListener('click', () => {
+            tabs.forEach(t => t.classList.remove('active'));
+            tab.classList.add('active');
+            state.rankingType = tab.dataset.type;
+            updateRanking();
+        });
+    });
+
+    updateRanking();
+}
+
+function updateRanking() {
+    const rankingList = document.getElementById('rankingList');
+    if (!rankingList) return;
+
+    // Calculate ICA for all stations
+    const stationsWithICA = STATIONS.map(s => ({
+        ...s,
+        ica: calculateICA(s),
+        icaInfo: getICAInfo(calculateICA(s))
+    }));
+
+    // Sort based on ranking type
+    const sorted = stationsWithICA.sort((a, b) =>
+        state.rankingType === 'clean' ? a.ica - b.ica : b.ica - a.ica
+    );
+
+    // Take top 5
+    const top5 = sorted.slice(0, 5);
+
+    rankingList.innerHTML = top5.map((station, index) => {
+        const positionClass = index === 0 ? 'gold' : index === 1 ? 'silver' : index === 2 ? 'bronze' : '';
+        const medal = index === 0 ? '🥇' : index === 1 ? '🥈' : index === 2 ? '🥉' : (index + 1);
+
+        return `
+            <div class="ranking-item" onclick="selectStationById(${station.id})">
+                <span class="ranking-position ${positionClass}">${medal}</span>
+                <span class="ranking-name">${station.name}</span>
+                <span class="ranking-ica" style="background: ${station.icaInfo.color}; color: #0c1222;">${station.ica}</span>
+            </div>
+        `;
+    }).join('');
+}
+
+function selectStationById(id) {
+    const station = STATIONS.find(s => s.id === id);
+    if (station) selectStation(station);
+}
+
+// ===== My Zone =====
+function setupMyZone() {
+    const myZoneSelect = document.getElementById('myZoneSelect');
+    if (!myZoneSelect) return;
+
+    myZoneSelect.addEventListener('change', (e) => {
+        const zoneName = e.target.value;
+        state.myZone = zoneName;
+        localStorage.setItem('chilealerta_myzone', zoneName);
+
+        if (zoneName) {
+            showToast(`Zona configurada: ${zoneName}`, 'success');
+            checkZoneAlert();
+        } else {
+            document.getElementById('zoneAlert').style.display = 'none';
+        }
+    });
+}
+
+function loadMyZone() {
+    const savedZone = localStorage.getItem('chilealerta_myzone');
+    if (savedZone) {
+        state.myZone = savedZone;
+        const myZoneSelect = document.getElementById('myZoneSelect');
+        if (myZoneSelect) {
+            myZoneSelect.value = savedZone;
+        }
+        checkZoneAlert();
+    }
+}
+
+function checkZoneAlert() {
+    if (!state.myZone) return;
+
+    const zoneAlert = document.getElementById('zoneAlert');
+    const zoneAlertText = document.getElementById('zoneAlertText');
+    if (!zoneAlert || !zoneAlertText) return;
+
+    // Find station matching zone
+    const station = STATIONS.find(s =>
+        s.name.toLowerCase() === state.myZone.toLowerCase() ||
+        s.location.toLowerCase().includes(state.myZone.toLowerCase())
+    );
+
+    if (station) {
+        const ica = calculateICA(station);
+        const icaInfo = getICAInfo(ica);
+
+        if (ica > 100) {
+            zoneAlert.style.display = 'flex';
+            zoneAlertText.textContent = `${station.name}: ICA ${ica} - ${icaInfo.status}`;
+
+            // Send notification if enabled
+            if (state.notificationsEnabled && Notification.permission === 'granted') {
+                new Notification('⚠️ Alerta en tu zona', {
+                    body: `${station.name}: ICA ${ica} - ${icaInfo.status}`,
+                    icon: './icons/icon-192.png',
+                    tag: 'zone-alert'
+                });
+            }
+        } else {
+            zoneAlert.style.display = 'none';
+        }
+    }
+}
+
 // ===== PWA Install Prompt =====
 function setupPWAInstall() {
     window.addEventListener('beforeinstallprompt', (e) => {
@@ -930,6 +1108,6 @@ function setupPWAInstall() {
 }
 
 // ===== Console Welcome Message =====
-console.log('%c🇨🇱 ChileAlerta v3.0', 'font-size: 24px; font-weight: bold; color: #6366f1;');
-console.log('%cMonitor de Emergencias y Ambiente en Tiempo Real', 'font-size: 12px; color: #94a3b8;');
-console.log('%c🎨 Con tema claro/oscuro, notificaciones y filtro por región', 'font-size: 10px; color: #64748b;');
+console.log('%c🇨🇱 ChileAlerta v5.0', 'font-size: 24px; font-weight: bold; color: #0d9488;');
+console.log('%cMonitor de Emergencias y Ambiente en Tiempo Real', 'font-size: 12px; color: #9ca3af;');
+console.log('%c🏆 Ranking, compartir y alertas por zona', 'font-size: 10px; color: #6b7280;');

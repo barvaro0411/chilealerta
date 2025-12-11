@@ -87,6 +87,9 @@
                         <span class="ica-status" id="icaStatus">Selecciona una estación</span>
                         <span class="ica-station" id="icaStation">--</span>
                     </div>
+                    <button class="btn-share" id="btnShare" title="Compartir">
+                        📤
+                    </button>
                 </div>
                 <div class="pollutants" id="pollutants">
                     <div class="pollutant">
@@ -135,6 +138,41 @@
                         <option value="O'Higgins">O'Higgins</option>
                         <option value="Aysén">Aysén</option>
                     </select>
+                </div>
+                <div class="ranking-section" id="rankingSection">
+                    <h3>🏆 Ranking Ciudades</h3>
+                    <div class="ranking-tabs">
+                        <button class="ranking-tab active" data-type="clean">🌿 Más Limpias</button>
+                        <button class="ranking-tab" data-type="polluted">💨 Más Contaminadas</button>
+                    </div>
+                    <div class="ranking-list" id="rankingList">
+                        <!-- Populated by JS -->
+                    </div>
+                </div>
+                <div class="my-zone" id="myZone">
+                    <h3>📍 Mi Zona</h3>
+                    <select id="myZoneSelect">
+                        <option value="">Elige tu zona para alertas</option>
+                        <option value="Pudahuel">Pudahuel</option>
+                        <option value="Cerrillos">Cerrillos</option>
+                        <option value="Cerro Navia">Cerro Navia</option>
+                        <option value="El Bosque">El Bosque</option>
+                        <option value="Independencia">Independencia</option>
+                        <option value="La Florida">La Florida</option>
+                        <option value="Las Condes">Las Condes</option>
+                        <option value="Santiago Centro">Santiago Centro</option>
+                        <option value="Puente Alto">Puente Alto</option>
+                        <option value="Quilicura">Quilicura</option>
+                        <option value="Concepción">Concepción</option>
+                        <option value="Temuco">Temuco</option>
+                        <option value="Valparaíso">Valparaíso</option>
+                        <option value="Rancagua">Rancagua</option>
+                        <option value="Coyhaique">Coyhaique</option>
+                    </select>
+                    <div class="zone-alert" id="zoneAlert" style="display: none;">
+                        <span class="zone-alert-icon">⚠️</span>
+                        <span class="zone-alert-text" id="zoneAlertText"></span>
+                    </div>
                 </div>
                 <div class="stations-list" id="stationsList">
                     <h3>Estaciones <span id="stationCount">(15)</span></h3>
