@@ -104,10 +104,13 @@ document.addEventListener('DOMContentLoaded', () => {
     setupShareButton();
     setupOnboarding();
     setupMobileTabs();
+    setupStats();
+    setupOfflineDetection();
     initAirHistoryChart();
     simulateDataUpdates();
     setupPWAInstall();
     loadMyZone();
+    trackFirstVisit();
 
     // Hide loading after everything loads
     setTimeout(hideLoading, 1500);
@@ -1339,7 +1342,92 @@ function showMobileEmergencies() {
     }
 }
 
+// ===== Stats Modal =====
+function setupStats() {
+    const btnStats = document.getElementById('btnStats');
+    const statsOverlay = document.getElementById('statsOverlay');
+    const statsClose = document.getElementById('statsClose');
+
+    if (!btnStats || !statsOverlay) return;
+
+    btnStats.addEventListener('click', () => {
+        loadStats();
+        statsOverlay.style.display = 'flex';
+    });
+
+    statsClose?.addEventListener('click', () => {
+        statsOverlay.style.display = 'none';
+    });
+
+    statsOverlay.addEventListener('click', (e) => {
+        if (e.target === statsOverlay) {
+            statsOverlay.style.display = 'none';
+        }
+    });
+}
+
+function loadStats() {
+    const stats = JSON.parse(localStorage.getItem('chilealerta_stats') || '{}');
+
+    document.getElementById('statReports').textContent = stats.reports || 0;
+    document.getElementById('statStations').textContent = stats.stationsViewed || 0;
+    document.getElementById('statDays').textContent = calculateDaysUsing();
+
+    // Update message based on activity
+    const message = document.getElementById('statsMessage');
+    const reports = stats.reports || 0;
+    if (reports >= 10) {
+        message.textContent = '🏆 ¡Eres un ciudadano ejemplar!';
+    } else if (reports >= 5) {
+        message.textContent = '⭐ ¡Gran colaborador de la comunidad!';
+    } else if (reports >= 1) {
+        message.textContent = '👏 ¡Gracias por tu primer reporte!';
+    } else {
+        message.textContent = '💡 ¡Reporta tu primera emergencia!';
+    }
+}
+
+function calculateDaysUsing() {
+    const firstVisit = localStorage.getItem('chilealerta_first_visit');
+    if (!firstVisit) return 1;
+
+    const days = Math.floor((Date.now() - parseInt(firstVisit)) / (1000 * 60 * 60 * 24));
+    return Math.max(1, days + 1);
+}
+
+function trackFirstVisit() {
+    if (!localStorage.getItem('chilealerta_first_visit')) {
+        localStorage.setItem('chilealerta_first_visit', Date.now().toString());
+    }
+}
+
+function incrementStat(key) {
+    const stats = JSON.parse(localStorage.getItem('chilealerta_stats') || '{}');
+    stats[key] = (stats[key] || 0) + 1;
+    localStorage.setItem('chilealerta_stats', JSON.stringify(stats));
+}
+
+// ===== Offline Detection =====
+function setupOfflineDetection() {
+    const indicator = document.getElementById('offlineIndicator');
+    if (!indicator) return;
+
+    function updateOnlineStatus() {
+        if (navigator.onLine) {
+            indicator.style.display = 'none';
+        } else {
+            indicator.style.display = 'flex';
+        }
+    }
+
+    window.addEventListener('online', updateOnlineStatus);
+    window.addEventListener('offline', updateOnlineStatus);
+
+    // Check initial state
+    updateOnlineStatus();
+}
+
 // ===== Console Welcome Message =====
-console.log('%c🇨🇱 ChileAlerta v7.0', 'font-size: 24px; font-weight: bold; color: #0d9488;');
+console.log('%c🇨🇱 ChileAlerta v8.0', 'font-size: 24px; font-weight: bold; color: #0d9488;');
 console.log('%cMonitor de Emergencias y Ambiente en Tiempo Real', 'font-size: 12px; color: #9ca3af;');
-console.log('%c📱 Con tabs móviles para mejor navegación', 'font-size: 10px; color: #6b7280;');
+console.log('%c✨ Con stats personales, modo offline y footer profesional', 'font-size: 10px; color: #6b7280;');
